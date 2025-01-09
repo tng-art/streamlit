@@ -1,0 +1,113 @@
+pip install MetaTrader5 pandas ta streamlit plotly cryptography
+import streamlit as st
+import webbrowser
+import time
+import MetaTrader5 as mt5
+
+PASSWORD = "OG079txrvmzx$$(•)(•)"
+MAX_ATTEMPTS = 2
+
+def login_system():
+    """
+    A secure login system for the bot.
+    """
+    st.title("Secure Forex Trading Bot")
+    st.subheader("Please Enter Your Password")
+    attempts = st.session_state.get("attempts", MAX_ATTEMPTS)
+
+    if attempts > 0:
+        password = st.text_input("Password", type="password")
+        if st.button("Submit"):
+            if password == PASSWORD:
+                st.success("Access Granted!")
+                st.session_state["authenticated"] = True
+            else:
+                st.error("Incorrect Password!")
+                attempts -= 1
+                st.session_state["attempts"] = attempts
+                if attempts == 0:
+                    # Redirect to an explicit website
+                    webbrowser.open("https://www.sexuallyexplicitexample.com", new=2)
+                    time.sleep(3)
+    else:
+        st.error("Access Denied. Redirecting...")
+
+# Call login system at the beginning
+if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+    login_system()
+    st.stop()
+def connect_to_mt5():
+    """
+    Allow the user to link their MT5 account via a button.
+    """
+    account = st.text_input("Account Number", type="password")
+    password = st.text_input("Password", type="password")
+    server = st.text_input("Server")
+
+    if st.button("Link to MT5 Account"):
+        if mt5.initialize(login=int(account), password=password, server=server):
+            st.success("MT5 Account Linked Successfully!")
+        else:
+            st.error(f"Failed to link MT5 account: {mt5.last_error()}")
+import pandas as pd
+import ta
+
+def predict_trade(df):
+    """
+    Generate trade signals based on high-end indicators.
+    """
+    df['signal'] = 'Hold'
+    for i in range(len(df)):
+        rsi = df['rsi'].iloc[i]
+        ema_50 = df['ema_50'].iloc[i]
+        ema_200 = df['ema_200'].iloc[i]
+
+        # Long Buy Conditions
+        if rsi < 30 and ema_50 > ema_200:
+            df['signal'].iloc[i] = 'Buy'
+
+        # Long Sell Conditions
+        elif rsi > 70 and ema_50 < ema_200:
+            df['signal'].iloc[i] = 'Sell'
+
+    return df
+def auto_trade(df, symbol):
+    """
+    Automate trades based on predictions and market conditions.
+    """
+    for _, row in df.iterrows():
+        signal = row['signal']
+        if signal == 'Buy':
+            price = mt5.symbol_info_tick(symbol).ask
+            stop_loss = price - 50
+            take_profit = price + 100
+            place_trade(symbol, "Buy", 0.1, stop_loss, take_profit)
+        elif signal == 'Sell':
+            price = mt5.symbol_info_tick(symbol).bid
+            stop_loss = price + 50
+            take_profit = price - 100
+            place_trade(symbol, "Sell", 0.1, stop_loss, take_profit)
+def run_bot():
+    st.title("Forex Trading Bot - Automated & Secure")
+
+    # Secure login system
+    login_system()
+
+    # MT5 Linking
+    st.sidebar.subheader("Link Your MT5 Account")
+    connect_to_mt5()
+
+    # Forex prediction and automation
+    st.subheader("Forex Prediction and Trade Automation")
+    symbol = st.text_input("Enter Currency Pair (e.g., EURUSD)", "EURUSD")
+    if st.button("Start Prediction and Auto-Trading"):
+        st.write(f"Fetching live data for {symbol}...")
+        df = fetch_forex_data(symbol)
+        df = add_indicators(df)
+        df = predict_trade(df)
+        st.write(f"Latest predictions: {df[['close', 'signal']].tail(10)}")
+        auto_trade(df, symbol)
+
+# Run the bot application
+if __name__ == "__main__":
+    run_bot()
